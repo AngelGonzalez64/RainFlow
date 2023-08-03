@@ -1,4 +1,4 @@
-#Solo falta que marque las ubicaciones de los lugares que tienen potencial para la construccion de la presa (Finished)
+#Solo falta que marque las ubicaciones de los lugares que tienen potencial para la construccion de la presa (Not working now)
 
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -9,6 +9,7 @@ import requests
 import numpy as np
 from sklearn.model_selection import train_test_split
 import tensorflow as tf
+from Previo import create_interactive_map
 
 # Coordenadas de las estaciones dentro del estado de Durango
 coordinates = {
@@ -175,7 +176,7 @@ def create_interactive_map(potential_locations):
     folium.LayerControl().add_to(my_map)
 
     # Guardar el mapa como archivo HTML
-    map_file_path = os.path.join("Mapas", "potential_presa_locations_map.html")
+    map_file_path = os.path.join("Update", "potential_presa_locations_map.html")
     my_map.save(map_file_path)
 
     print("Mapa interactivo con las ubicaciones potenciales para la construcción de una presa generado.")
