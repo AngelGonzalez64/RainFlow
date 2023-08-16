@@ -7,6 +7,8 @@ import requests
 import numpy as np
 from sklearn.model_selection import train_test_split
 import tensorflow as tf
+import requests
+from requests.exceptions import ConnectTimeout
 
 # Coordenadas de las estaciones dentro del estado de Durango
 coordinates = {
@@ -44,14 +46,19 @@ durango_boundaries = {
     "east": -102.0
 }
 
-def get_elevation(latitude, longitude):
-    url = f"https://api.open-elevation.com/api/v1/lookup?locations={latitude},{longitude}"
-    response = requests.get(url)
-    if response.ok:
+def get_elevation(lat, lon):
+    url = f"https://api.open-elevation.com/api/v1/lookup?locations={lat},{lon}"
+    
+    try:
+        response = requests.get(url, timeout=10)  # Ajustar el tiempo de espera según sea necesario
         data = response.json()
-        elevation = data["results"][0]["elevation"]
+        elevation = data['results'][0]['elevation']
         return elevation
-    else:
+    except ConnectTimeout:
+        print("Error: Tiempo de espera agotado al intentar conectarse al servicio de elevación API.")
+        return None
+    except Exception as e:
+        print(f"Error al obtener la elevación: {e}")
         return None
 
 def exploratory_analysis(dataframes, file_list):
@@ -180,7 +187,6 @@ def create_interactive_map(potential_locations):
     my_map.save(map_file_path)
 
     print("Mapa interactivo con las ubicaciones potenciales para la construcción de una presa generado.")
-
 
 def prepare_data():
     # Leer los datos de las estadísticas desde los archivos .json y etiquetar las ubicaciones
