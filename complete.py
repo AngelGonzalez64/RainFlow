@@ -9,6 +9,9 @@ from sklearn.model_selection import train_test_split
 import tensorflow as tf
 import requests
 from requests.exceptions import ConnectTimeout
+from requests.exceptions import Timeout
+
+ELEVATION_TIMEOUT = 10  # Tiempo de espera en segundos para la solicitud de elevación
 
 # Coordenadas de las estaciones dentro del estado de Durango
 coordinates = {
@@ -50,16 +53,18 @@ def get_elevation(lat, lon):
     url = f"https://api.open-elevation.com/api/v1/lookup?locations={lat},{lon}"
     
     try:
-        response = requests.get(url, timeout=10)  # Ajustar el tiempo de espera según sea necesario
+        response = requests.get(url, timeout=ELEVATION_TIMEOUT)
+        response.raise_for_status()  # Verificar si hay errores en la respuesta
         data = response.json()
         elevation = data['results'][0]['elevation']
         return elevation
-    except ConnectTimeout:
+    except Timeout:
         print("Error: Tiempo de espera agotado al intentar conectarse al servicio de elevación API.")
-        return None
-    except Exception as e:
+    except requests.RequestException as e:
         print(f"Error al obtener la elevación: {e}")
-        return None
+    except Exception as e:
+        print(f"Error inesperado: {e}")
+    return None
 
 def exploratory_analysis(dataframes, file_list):
     for i, df in enumerate(dataframes):
@@ -160,9 +165,11 @@ def create_interactive_map(potential_locations):
 
     # Agregar diferentes vistas al mapa (vista satelital, vista de relieve, etc.)
     folium.TileLayer('openstreetmap').add_to(my_map)
-    folium.TileLayer('Stamen Terrain').add_to(my_map)
-    folium.TileLayer('Stamen Toner').add_to(my_map)
-    folium.TileLayer('stamentonerlabels').add_to(my_map)
+    folium.TileLayer('Stamen Terrain', attr='Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under ODbL').add_to(my_map)
+    
+    folium.TileLayer('Stamen Toner', attr='Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under ODbL').add_to(my_map)
+    folium.TileLayer('stamentonerlabels', attr='Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under ODbL').add_to(my_map)
+
 
     # Crear un grupo de marcadores para las ubicaciones potenciales
     potential_group = folium.FeatureGroup(name='Ubicaciones Potenciales')
